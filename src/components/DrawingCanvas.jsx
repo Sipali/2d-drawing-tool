@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from 'react';
-import { useDrawing } from '../hooks/useDrawing';
 import { createLineShape, createRectangleShape, createCircleShape } from '../geometry/shapeFactory';
 import { renderShapes } from '../rendering/renderShapes';
 
@@ -31,9 +30,16 @@ export function getCanvasCoordinates(event, canvasRef) {
   return { x, y };
 }
 
-export default function DrawingCanvas() {
+export default function DrawingCanvas({
+  shapes = [],
+  setShapes,
+  activeTool = 'line',
+  draft = null,
+  setDraft,
+  selectedShapeId = null,
+  setSelectedShapeId,
+}) {
   const canvasRef = useRef(null);
-  const { shapes, setShapes, activeTool, draft, setDraft } = useDrawing();
 
   // ResizeObserver updates canvas width/height attributes when container or window resizes
   useEffect(() => {
