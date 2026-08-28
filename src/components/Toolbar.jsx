@@ -8,11 +8,21 @@ const tools = [
 ];
 
 /**
- * Toolbar component allowing user to switch between drawing tools.
+ * Toolbar component allowing user to switch between drawing tools and delete selected shape.
  * 
- * @param {{ activeTool: string, setActiveTool: (tool: string) => void }} props 
+ * @param {{
+ *   activeTool: string,
+ *   setActiveTool: (tool: string) => void,
+ *   selectedShapeId: string|null,
+ *   onDeleteShape: () => void
+ * }} props 
  */
-export default function Toolbar({ activeTool, setActiveTool }) {
+export default function Toolbar({
+  activeTool,
+  setActiveTool,
+  selectedShapeId,
+  onDeleteShape,
+}) {
   return (
     <div className="toolbar">
       {tools.map((tool) => (
@@ -25,6 +35,15 @@ export default function Toolbar({ activeTool, setActiveTool }) {
           {tool.label}
         </button>
       ))}
+      <button
+        type="button"
+        className="toolbar-btn delete-btn"
+        disabled={!selectedShapeId}
+        onClick={onDeleteShape}
+        title={selectedShapeId ? 'Delete selected shape (Del/Backspace)' : 'No shape selected'}
+      >
+        Delete
+      </button>
     </div>
   );
 }
