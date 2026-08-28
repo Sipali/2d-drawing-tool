@@ -1,121 +1,92 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import React, { useRef, useEffect, useCallback } from 'react'
+import { useDrawing } from './hooks/useDrawing'
+import Toolbar from './components/Toolbar'
+import DrawingCanvas from './components/DrawingCanvas'
+import { exportShapesAsJson } from './export/exportJson'
+import { exportCanvasAsPng } from './export/exportPng'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const drawingState = useDrawing()
+  const {
+    shapes,
+    selectedShapeId,
+    setSelectedShapeId,
+    commitShapes,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = drawingState
+
+  const canvasRef = useRef(null)
+
+  const deleteSelectedShape = useCallback(() => {
+    if (!selectedShapeId) return
+    commitShapes((prevShapes) => prevShapes.filter((shape) => shape.id !== selectedShapeId))
+    setSelectedShapeId(null)
+  }, [selectedShapeId, commitShapes, setSelectedShapeId])
+
+  const handleExportJson = useCallback(() => {
+    exportShapesAsJson(shapes)
+  }, [shapes])
+
+  const handleExportPng = useCallback(() => {
+    exportCanvasAsPng(canvasRef, shapes, selectedShapeId)
+  }, [shapes, selectedShapeId])
+
+  // Ref that always points to the latest action handlers, avoiding stale closures in keydown listener
+  const actionsRef = useRef({ undo, redo, deleteSelectedShape })
+  useEffect(() => {
+    actionsRef.current = { undo, redo, deleteSelectedShape }
+  })
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const target = event.target
+      const tagName = target?.tagName?.toUpperCase()
+      if (tagName === 'INPUT' || tagName === 'TEXTAREA' || target?.isContentEditable) {
+        return
+      }
+
+      const isCtrlOrCmd = event.ctrlKey || event.metaKey
+      const key = event.key.toLowerCase()
+
+      if (isCtrlOrCmd && key === 'z' && !event.shiftKey) {
+        event.preventDefault()
+        actionsRef.current.undo()
+      } else if ((isCtrlOrCmd && key === 'y') || (isCtrlOrCmd && key === 'z' && event.shiftKey)) {
+        event.preventDefault()
+        actionsRef.current.redo()
+      } else if (event.key === 'Delete' || event.key === 'Backspace') {
+        actionsRef.current.deleteSelectedShape()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <div className="app-container">
+      <Toolbar
+        activeTool={drawingState.activeTool}
+        setActiveTool={drawingState.setActiveTool}
+        selectedShapeId={drawingState.selectedShapeId}
+        onDeleteShape={deleteSelectedShape}
+        onExportJson={handleExportJson}
+        onExportPng={handleExportPng}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
+      />
+      <div className="canvas-container">
+        <DrawingCanvas canvasRef={canvasRef} {...drawingState} />
+      </div>
+    </div>
   )
 }
 
