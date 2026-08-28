@@ -2,7 +2,7 @@
 import { getLineLength, getRectangleDimensions, getCircleRadius } from '../geometry/dimensions';
 
 /**
- * Clears the canvas and renders all finalized shapes and the active draft shape.
+ * Clears the canvas, fills white background, and renders all finalized shapes and active draft shape.
  * 
  * @param {CanvasRenderingContext2D} ctx 
  * @param {Array} shapes 
@@ -11,8 +11,13 @@ import { getLineLength, getRectangleDimensions, getCircleRadius } from '../geome
 export function renderShapes(ctx, shapes = [], draft = null) {
   if (!ctx) return;
 
+  // Fill canvas with white background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
   // Clear entire canvas area
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
   // Set default line styles for finalized shapes
   ctx.strokeStyle = '#000000';
