@@ -32,6 +32,7 @@ export function getCanvasCoordinates(event, canvasRef) {
 }
 
 export default function DrawingCanvas({
+  canvasRef: externalCanvasRef,
   shapes = [],
   setShapes,
   activeTool = 'line',
@@ -42,7 +43,8 @@ export default function DrawingCanvas({
   dragOffset = null,
   setDragOffset,
 }) {
-  const canvasRef = useRef(null);
+  const internalRef = useRef(null);
+  const canvasRef = externalCanvasRef || internalRef;
 
   // ResizeObserver updates canvas width/height attributes when container or window resizes
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function DrawingCanvas({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [shapes, draft, selectedShapeId]);
+  }, [canvasRef, shapes, draft, selectedShapeId]);
 
   // Re-render canvas whenever shapes, draft, or selectedShapeId changes
   useEffect(() => {
@@ -86,7 +88,7 @@ export default function DrawingCanvas({
     if (ctx) {
       renderShapes(ctx, shapes, draft, selectedShapeId);
     }
-  }, [shapes, draft, selectedShapeId]);
+  }, [canvasRef, shapes, draft, selectedShapeId]);
 
   const handleMouseDown = (event) => {
     const coords = getCanvasCoordinates(event, canvasRef);

@@ -8,14 +8,15 @@ const tools = [
 ];
 
 /**
- * Toolbar component allowing user to switch between drawing tools, delete selected shape, and export drawing as JSON.
+ * Toolbar component allowing user to switch between drawing tools, delete selected shape, and export drawing as JSON or PNG.
  * 
  * @param {{
  *   activeTool: string,
  *   setActiveTool: (tool: string) => void,
  *   selectedShapeId: string|null,
  *   onDeleteShape: () => void,
- *   onExportJson: () => void
+ *   onExportJson: () => void,
+ *   onExportPng: () => void
  * }} props 
  */
 export default function Toolbar({
@@ -24,6 +25,7 @@ export default function Toolbar({
   selectedShapeId,
   onDeleteShape,
   onExportJson,
+  onExportPng,
 }) {
   return (
     <div className="toolbar">
@@ -52,7 +54,15 @@ export default function Toolbar({
         onClick={onExportJson}
         title="Export drawing as JSON file"
       >
-        Export
+        Export JSON
+      </button>
+      <button
+        type="button"
+        className="toolbar-btn export-btn"
+        onClick={onExportPng}
+        title="Export drawing as PNG image"
+      >
+        Export PNG
       </button>
     </div>
   );
