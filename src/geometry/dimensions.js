@@ -28,3 +28,15 @@ export function getRectangleDimensions(startX, startY, endX, endY) {
     height: Math.round(height * 100) / 100,
   };
 }
+
+/**
+ * Calculates the radius of a circle from center (cx, cy) to edge (currentX, currentY), rounded to 2 decimal places.
+ * @param {number} cx 
+ * @param {number} cy 
+ * @param {number} currentX 
+ * @param {number} currentY 
+ */
+export function getCircleRadius(cx, cy, currentX, currentY) {
+  const radius = Math.sqrt((currentX - cx) ** 2 + (currentY - cy) ** 2);
+  return Math.round(radius * 100) / 100;
+}

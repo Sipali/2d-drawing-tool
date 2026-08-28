@@ -43,3 +43,25 @@ export function createRectangleShape(id, startX, startY, endX, endY) {
     height,
   };
 }
+
+/**
+ * Creates a circle shape data object.
+ * Calculates radius from center (cx, cy) to edge (currentX, currentY).
+ * @param {string} id 
+ * @param {number} cx 
+ * @param {number} cy 
+ * @param {number} currentX 
+ * @param {number} currentY 
+ */
+export function createCircleShape(id, cx, cy, currentX, currentY) {
+  const radius = Math.sqrt((currentX - cx) ** 2 + (currentY - cy) ** 2);
+  const r = Math.round(radius * 100) / 100;
+
+  return {
+    id,
+    type: 'circle',
+    cx,
+    cy,
+    r,
+  };
+}

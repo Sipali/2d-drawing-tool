@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useDrawing } from '../hooks/useDrawing';
-import { createLineShape, createRectangleShape } from '../geometry/shapeFactory';
+import { createLineShape, createRectangleShape, createCircleShape } from '../geometry/shapeFactory';
 import { renderShapes } from '../rendering/renderShapes';
 
 /**
@@ -97,6 +97,14 @@ export default function DrawingCanvas() {
         endX: coords.x,
         endY: coords.y,
       });
+    } else if (activeTool === 'circle') {
+      setDraft({
+        type: 'circle',
+        cx: coords.x,
+        cy: coords.y,
+        currentX: coords.x,
+        currentY: coords.y,
+      });
     }
   };
 
@@ -116,6 +124,12 @@ export default function DrawingCanvas() {
           ...prevDraft,
           endX: coords.x,
           endY: coords.y,
+        };
+      } else if (prevDraft.type === 'circle') {
+        return {
+          ...prevDraft,
+          currentX: coords.x,
+          currentY: coords.y,
         };
       }
       return prevDraft;
@@ -139,6 +153,15 @@ export default function DrawingCanvas() {
         Date.now().toString(),
         draft.startX,
         draft.startY,
+        coords.x,
+        coords.y
+      );
+      setShapes((prevShapes) => [...prevShapes, newShape]);
+    } else if (draft.type === 'circle') {
+      const newShape = createCircleShape(
+        Date.now().toString(),
+        draft.cx,
+        draft.cy,
         coords.x,
         coords.y
       );

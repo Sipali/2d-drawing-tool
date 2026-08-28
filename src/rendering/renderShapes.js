@@ -1,5 +1,5 @@
 // Canvas drawing functions to render finalized shapes and active draft previews.
-import { getLineLength, getRectangleDimensions } from '../geometry/dimensions';
+import { getLineLength, getRectangleDimensions, getCircleRadius } from '../geometry/dimensions';
 
 /**
  * Clears the canvas and renders all finalized shapes and the active draft shape.
@@ -28,6 +28,10 @@ export function renderShapes(ctx, shapes = [], draft = null) {
       ctx.stroke();
     } else if (shape.type === 'rectangle') {
       ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+    } else if (shape.type === 'circle') {
+      ctx.beginPath();
+      ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
+      ctx.stroke();
     }
   }
 
@@ -71,6 +75,20 @@ export function renderShapes(ctx, shapes = [], draft = null) {
       ctx.font = '14px sans-serif';
       ctx.fillStyle = '#000000';
       ctx.fillText(`${w} x ${h}`, draft.endX + 8, draft.endY + 16);
+
+      ctx.restore();
+    } else if (draft.type === 'circle') {
+      ctx.save();
+      ctx.setLineDash([5, 5]); // Dashed stroke for draft preview
+      const r = getCircleRadius(draft.cx, draft.cy, draft.currentX, draft.currentY);
+      ctx.beginPath();
+      ctx.arc(draft.cx, draft.cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Render radius readout near cursor
+      ctx.font = '14px sans-serif';
+      ctx.fillStyle = '#000000';
+      ctx.fillText(`r = ${r}`, draft.currentX + 8, draft.currentY + 16);
 
       ctx.restore();
     }
