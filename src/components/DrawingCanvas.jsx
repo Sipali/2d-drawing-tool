@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useDrawing } from '../hooks/useDrawing';
-import { createLineShape } from '../geometry/shapeFactory';
+import { createLineShape, createRectangleShape } from '../geometry/shapeFactory';
 import { renderShapes } from '../rendering/renderShapes';
 
 /**
@@ -89,6 +89,14 @@ export default function DrawingCanvas() {
         x2: coords.x,
         y2: coords.y,
       });
+    } else if (activeTool === 'rectangle') {
+      setDraft({
+        type: 'rectangle',
+        startX: coords.x,
+        startY: coords.y,
+        endX: coords.x,
+        endY: coords.y,
+      });
     }
   };
 
@@ -97,11 +105,20 @@ export default function DrawingCanvas() {
     const coords = getCanvasCoordinates(event, canvasRef);
     setDraft((prevDraft) => {
       if (!prevDraft) return null;
-      return {
-        ...prevDraft,
-        x2: coords.x,
-        y2: coords.y,
-      };
+      if (prevDraft.type === 'line') {
+        return {
+          ...prevDraft,
+          x2: coords.x,
+          y2: coords.y,
+        };
+      } else if (prevDraft.type === 'rectangle') {
+        return {
+          ...prevDraft,
+          endX: coords.x,
+          endY: coords.y,
+        };
+      }
+      return prevDraft;
     });
   };
 
@@ -113,6 +130,15 @@ export default function DrawingCanvas() {
         Date.now().toString(),
         draft.x1,
         draft.y1,
+        coords.x,
+        coords.y
+      );
+      setShapes((prevShapes) => [...prevShapes, newShape]);
+    } else if (draft.type === 'rectangle') {
+      const newShape = createRectangleShape(
+        Date.now().toString(),
+        draft.startX,
+        draft.startY,
         coords.x,
         coords.y
       );
