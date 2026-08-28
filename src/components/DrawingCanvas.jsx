@@ -39,6 +39,8 @@ export default function DrawingCanvas({
   setDraft,
   selectedShapeId = null,
   setSelectedShapeId,
+  dragOffset = null,
+  setDragOffset,
 }) {
   const canvasRef = useRef(null);
 
@@ -92,8 +94,19 @@ export default function DrawingCanvas({
       const foundShape = findShapeAtPoint(shapes, coords.x, coords.y);
       if (foundShape) {
         setSelectedShapeId?.(foundShape.id);
+        // Calculate offset between click position and shape reference point
+        let offset = null;
+        if (foundShape.type === 'line') {
+          offset = { dx: coords.x - foundShape.x1, dy: coords.y - foundShape.y1 };
+        } else if (foundShape.type === 'rectangle') {
+          offset = { dx: coords.x - foundShape.x, dy: coords.y - foundShape.y };
+        } else if (foundShape.type === 'circle') {
+          offset = { dx: coords.x - foundShape.cx, dy: coords.y - foundShape.cy };
+        }
+        setDragOffset?.(offset);
       } else {
         setSelectedShapeId?.(null);
+        setDragOffset?.(null);
       }
     } else if (activeTool === 'line') {
       setDraft?.({
@@ -123,8 +136,49 @@ export default function DrawingCanvas({
   };
 
   const handleMouseMove = (event) => {
-    if (!draft) return;
     const coords = getCanvasCoordinates(event, canvasRef);
+
+    if (activeTool === 'select') {
+      if (!selectedShapeId || !dragOffset) return;
+
+      const newRefX = coords.x - dragOffset.dx;
+      const newRefY = coords.y - dragOffset.dy;
+
+      setShapes?.((prevShapes) =>
+        prevShapes.map((shape) => {
+          if (shape.id !== selectedShapeId) return shape;
+
+          if (shape.type === 'line') {
+            const deltaX = newRefX - shape.x1;
+            const deltaY = newRefY - shape.y1;
+            return {
+              ...shape,
+              x1: newRefX,
+              y1: newRefY,
+              x2: shape.x2 + deltaX,
+              y2: shape.y2 + deltaY,
+            };
+          } else if (shape.type === 'rectangle') {
+            return {
+              ...shape,
+              x: newRefX,
+              y: newRefY,
+            };
+          } else if (shape.type === 'circle') {
+            return {
+              ...shape,
+              cx: newRefX,
+              cy: newRefY,
+            };
+          }
+          return shape;
+        })
+      );
+      return;
+    }
+
+    if (!draft) return;
+
     setDraft?.((prevDraft) => {
       if (!prevDraft) return null;
       if (prevDraft.type === 'line') {
@@ -151,6 +205,11 @@ export default function DrawingCanvas({
   };
 
   const handleMouseUp = (event) => {
+    if (activeTool === 'select') {
+      setDragOffset?.(null);
+      return;
+    }
+
     if (!draft) return;
     const coords = getCanvasCoordinates(event, canvasRef);
     if (draft.type === 'line') {
