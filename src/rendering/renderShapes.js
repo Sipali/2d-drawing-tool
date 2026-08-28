@@ -3,29 +3,35 @@ import { getLineLength, getRectangleDimensions, getCircleRadius } from '../geome
 
 /**
  * Clears the canvas, fills white background, and renders all finalized shapes and active draft shape.
+ * Highlighted shapes matching selectedShapeId are rendered in blue with a thicker line.
  * 
  * @param {CanvasRenderingContext2D} ctx 
  * @param {Array} shapes 
  * @param {Object|null} draft 
+ * @param {string|null} selectedShapeId
  */
-export function renderShapes(ctx, shapes = [], draft = null) {
+export function renderShapes(ctx, shapes = [], draft = null, selectedShapeId = null) {
   if (!ctx) return;
 
   // Fill canvas with white background
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-  // Clear entire canvas area
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-  // Set default line styles for finalized shapes
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([]); // Ensure solid lines
-
   // Render all finalized shapes
   for (const shape of shapes) {
+    const isSelected = shape.id === selectedShapeId;
+
+    ctx.save();
+    ctx.setLineDash([]); // Ensure solid lines
+
+    if (isSelected) {
+      ctx.strokeStyle = '#2563eb'; // Blue highlight color
+      ctx.lineWidth = 3.5;
+    } else {
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+    }
+
     if (shape.type === 'line') {
       ctx.beginPath();
       ctx.moveTo(shape.x1, shape.y1);
@@ -38,10 +44,15 @@ export function renderShapes(ctx, shapes = [], draft = null) {
       ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
       ctx.stroke();
     }
+
+    ctx.restore();
   }
 
   // Render in-progress draft shape if present
   if (draft) {
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+
     if (draft.type === 'line') {
       ctx.save();
       ctx.setLineDash([5, 5]); // Dashed stroke for draft preview

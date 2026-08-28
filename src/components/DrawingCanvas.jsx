@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { createLineShape, createRectangleShape, createCircleShape } from '../geometry/shapeFactory';
+import { findShapeAtPoint } from '../geometry/hitTest';
 import { renderShapes } from '../rendering/renderShapes';
 
 /**
@@ -56,7 +57,7 @@ export default function DrawingCanvas({
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          renderShapes(ctx, shapes, draft);
+          renderShapes(ctx, shapes, draft, selectedShapeId);
         }
       }
     };
@@ -73,22 +74,29 @@ export default function DrawingCanvas({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [shapes, draft]);
+  }, [shapes, draft, selectedShapeId]);
 
-  // Re-render canvas whenever shapes or draft state changes
+  // Re-render canvas whenever shapes, draft, or selectedShapeId changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      renderShapes(ctx, shapes, draft);
+      renderShapes(ctx, shapes, draft, selectedShapeId);
     }
-  }, [shapes, draft]);
+  }, [shapes, draft, selectedShapeId]);
 
   const handleMouseDown = (event) => {
     const coords = getCanvasCoordinates(event, canvasRef);
-    if (activeTool === 'line') {
-      setDraft({
+    if (activeTool === 'select') {
+      const foundShape = findShapeAtPoint(shapes, coords.x, coords.y);
+      if (foundShape) {
+        setSelectedShapeId?.(foundShape.id);
+      } else {
+        setSelectedShapeId?.(null);
+      }
+    } else if (activeTool === 'line') {
+      setDraft?.({
         type: 'line',
         x1: coords.x,
         y1: coords.y,
@@ -96,7 +104,7 @@ export default function DrawingCanvas({
         y2: coords.y,
       });
     } else if (activeTool === 'rectangle') {
-      setDraft({
+      setDraft?.({
         type: 'rectangle',
         startX: coords.x,
         startY: coords.y,
@@ -104,7 +112,7 @@ export default function DrawingCanvas({
         endY: coords.y,
       });
     } else if (activeTool === 'circle') {
-      setDraft({
+      setDraft?.({
         type: 'circle',
         cx: coords.x,
         cy: coords.y,
@@ -117,7 +125,7 @@ export default function DrawingCanvas({
   const handleMouseMove = (event) => {
     if (!draft) return;
     const coords = getCanvasCoordinates(event, canvasRef);
-    setDraft((prevDraft) => {
+    setDraft?.((prevDraft) => {
       if (!prevDraft) return null;
       if (prevDraft.type === 'line') {
         return {
@@ -153,7 +161,7 @@ export default function DrawingCanvas({
         coords.x,
         coords.y
       );
-      setShapes((prevShapes) => [...prevShapes, newShape]);
+      setShapes?.((prevShapes) => [...prevShapes, newShape]);
     } else if (draft.type === 'rectangle') {
       const newShape = createRectangleShape(
         Date.now().toString(),
@@ -162,7 +170,7 @@ export default function DrawingCanvas({
         coords.x,
         coords.y
       );
-      setShapes((prevShapes) => [...prevShapes, newShape]);
+      setShapes?.((prevShapes) => [...prevShapes, newShape]);
     } else if (draft.type === 'circle') {
       const newShape = createCircleShape(
         Date.now().toString(),
@@ -171,9 +179,9 @@ export default function DrawingCanvas({
         coords.x,
         coords.y
       );
-      setShapes((prevShapes) => [...prevShapes, newShape]);
+      setShapes?.((prevShapes) => [...prevShapes, newShape]);
     }
-    setDraft(null);
+    setDraft?.(null);
   };
 
   return (
