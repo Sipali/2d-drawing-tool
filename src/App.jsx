@@ -2,17 +2,22 @@ import React, { useEffect, useCallback } from 'react'
 import { useDrawing } from './hooks/useDrawing'
 import Toolbar from './components/Toolbar'
 import DrawingCanvas from './components/DrawingCanvas'
+import { exportShapesAsJson } from './export/exportJson'
 import './App.css'
 
 function App() {
   const drawingState = useDrawing()
-  const { selectedShapeId, setShapes, setSelectedShapeId } = drawingState
+  const { shapes, selectedShapeId, setShapes, setSelectedShapeId } = drawingState
 
   const deleteSelectedShape = useCallback(() => {
     if (!selectedShapeId) return
     setShapes((prevShapes) => prevShapes.filter((shape) => shape.id !== selectedShapeId))
     setSelectedShapeId(null)
   }, [selectedShapeId, setShapes, setSelectedShapeId])
+
+  const handleExportJson = useCallback(() => {
+    exportShapesAsJson(shapes)
+  }, [shapes])
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -40,6 +45,7 @@ function App() {
         setActiveTool={drawingState.setActiveTool}
         selectedShapeId={drawingState.selectedShapeId}
         onDeleteShape={deleteSelectedShape}
+        onExportJson={handleExportJson}
       />
       <div className="canvas-container">
         <DrawingCanvas {...drawingState} />

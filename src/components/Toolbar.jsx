@@ -8,13 +8,14 @@ const tools = [
 ];
 
 /**
- * Toolbar component allowing user to switch between drawing tools and delete selected shape.
+ * Toolbar component allowing user to switch between drawing tools, delete selected shape, and export drawing as JSON.
  * 
  * @param {{
  *   activeTool: string,
  *   setActiveTool: (tool: string) => void,
  *   selectedShapeId: string|null,
- *   onDeleteShape: () => void
+ *   onDeleteShape: () => void,
+ *   onExportJson: () => void
  * }} props 
  */
 export default function Toolbar({
@@ -22,6 +23,7 @@ export default function Toolbar({
   setActiveTool,
   selectedShapeId,
   onDeleteShape,
+  onExportJson,
 }) {
   return (
     <div className="toolbar">
@@ -43,6 +45,14 @@ export default function Toolbar({
         title={selectedShapeId ? 'Delete selected shape (Del/Backspace)' : 'No shape selected'}
       >
         Delete
+      </button>
+      <button
+        type="button"
+        className="toolbar-btn export-btn"
+        onClick={onExportJson}
+        title="Export drawing as JSON file"
+      >
+        Export
       </button>
     </div>
   );
