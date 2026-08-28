@@ -42,6 +42,7 @@ export default function DrawingCanvas({
   setSelectedShapeId,
   dragOffset = null,
   setDragOffset,
+  commitShapes,
 }) {
   const internalRef = useRef(null);
   const canvasRef = externalCanvasRef || internalRef;
@@ -106,6 +107,8 @@ export default function DrawingCanvas({
           offset = { dx: coords.x - foundShape.cx, dy: coords.y - foundShape.cy };
         }
         setDragOffset?.(offset);
+        // Commit current pre-drag snapshot to history before dragging begins
+        commitShapes?.(shapes);
       } else {
         setSelectedShapeId?.(null);
         setDragOffset?.(null);
@@ -146,6 +149,7 @@ export default function DrawingCanvas({
       const newRefX = coords.x - dragOffset.dx;
       const newRefY = coords.y - dragOffset.dy;
 
+      // Update present shape coordinates directly during active dragging
       setShapes?.((prevShapes) =>
         prevShapes.map((shape) => {
           if (shape.id !== selectedShapeId) return shape;
@@ -214,6 +218,8 @@ export default function DrawingCanvas({
 
     if (!draft) return;
     const coords = getCanvasCoordinates(event, canvasRef);
+    const updateFn = commitShapes || setShapes;
+
     if (draft.type === 'line') {
       const newShape = createLineShape(
         Date.now().toString(),
@@ -222,7 +228,7 @@ export default function DrawingCanvas({
         coords.x,
         coords.y
       );
-      setShapes?.((prevShapes) => [...prevShapes, newShape]);
+      updateFn((prevShapes) => [...prevShapes, newShape]);
     } else if (draft.type === 'rectangle') {
       const newShape = createRectangleShape(
         Date.now().toString(),
@@ -231,7 +237,7 @@ export default function DrawingCanvas({
         coords.x,
         coords.y
       );
-      setShapes?.((prevShapes) => [...prevShapes, newShape]);
+      updateFn((prevShapes) => [...prevShapes, newShape]);
     } else if (draft.type === 'circle') {
       const newShape = createCircleShape(
         Date.now().toString(),
@@ -240,7 +246,7 @@ export default function DrawingCanvas({
         coords.x,
         coords.y
       );
-      setShapes?.((prevShapes) => [...prevShapes, newShape]);
+      updateFn((prevShapes) => [...prevShapes, newShape]);
     }
     setDraft?.(null);
   };
