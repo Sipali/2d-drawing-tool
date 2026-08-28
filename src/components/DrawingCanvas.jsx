@@ -1,4 +1,7 @@
 import React, { useRef, useEffect } from 'react';
+import { useDrawing } from '../hooks/useDrawing';
+import { createLineShape } from '../geometry/shapeFactory';
+import { renderShapes } from '../rendering/renderShapes';
 
 /**
  * Converts a native mouse event's clientX/clientY into canvas-local coordinates.
@@ -30,7 +33,9 @@ export function getCanvasCoordinates(event, canvasRef) {
 
 export default function DrawingCanvas() {
   const canvasRef = useRef(null);
+  const { shapes, setShapes, activeTool, draft, setDraft } = useDrawing();
 
+  // ResizeObserver updates canvas width/height attributes when container or window resizes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -43,13 +48,16 @@ export default function DrawingCanvas() {
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          renderShapes(ctx, shapes, draft);
+        }
       }
     };
 
     // Initial size update
     updateCanvasSize();
 
-    // ResizeObserver updates canvas width/height attributes when container or window resizes
     const resizeObserver = new ResizeObserver(() => {
       updateCanvasSize();
     });
@@ -59,24 +67,58 @@ export default function DrawingCanvas() {
     return () => {
       resizeObserver.disconnect();
     };
-  }, []);
+  }, [shapes, draft]);
+
+  // Re-render canvas whenever shapes or draft state changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      renderShapes(ctx, shapes, draft);
+    }
+  }, [shapes, draft]);
 
   const handleMouseDown = (event) => {
     const coords = getCanvasCoordinates(event, canvasRef);
-    // Temporary console.log to verify coordinate mapping; will be replaced with real drawing state logic in the next step.
-    console.log('onMouseDown:', coords);
+    if (activeTool === 'line') {
+      setDraft({
+        type: 'line',
+        x1: coords.x,
+        y1: coords.y,
+        x2: coords.x,
+        y2: coords.y,
+      });
+    }
   };
 
   const handleMouseMove = (event) => {
+    if (!draft) return;
     const coords = getCanvasCoordinates(event, canvasRef);
-    // Temporary console.log to verify coordinate mapping; will be replaced with real drawing state logic in the next step.
-    console.log('onMouseMove:', coords);
+    setDraft((prevDraft) => {
+      if (!prevDraft) return null;
+      return {
+        ...prevDraft,
+        x2: coords.x,
+        y2: coords.y,
+      };
+    });
   };
 
   const handleMouseUp = (event) => {
+    if (!draft) return;
     const coords = getCanvasCoordinates(event, canvasRef);
-    // Temporary console.log to verify coordinate mapping; will be replaced with real drawing state logic in the next step.
-    console.log('onMouseUp:', coords);
+    if (draft.type === 'line') {
+      const newShape = createLineShape(
+        Date.now().toString(),
+        draft.x1,
+        draft.y1,
+        coords.x,
+        coords.y
+      );
+      setShapes((prevShapes) => [...prevShapes, newShape]);
+    }
+    setDraft(null);
   };
 
   return (
