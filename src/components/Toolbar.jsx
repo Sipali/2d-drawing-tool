@@ -8,7 +8,7 @@ const tools = [
 ];
 
 /**
- * Toolbar component allowing user to switch between drawing tools, delete selected shape, and export drawing as JSON or PNG.
+ * Toolbar component allowing user to switch tools, undo/redo actions, delete shapes, and export drawing.
  * 
  * @param {{
  *   activeTool: string,
@@ -16,7 +16,11 @@ const tools = [
  *   selectedShapeId: string|null,
  *   onDeleteShape: () => void,
  *   onExportJson: () => void,
- *   onExportPng: () => void
+ *   onExportPng: () => void,
+ *   canUndo: boolean,
+ *   canRedo: boolean,
+ *   onUndo: () => void,
+ *   onRedo: () => void
  * }} props 
  */
 export default function Toolbar({
@@ -26,6 +30,10 @@ export default function Toolbar({
   onDeleteShape,
   onExportJson,
   onExportPng,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
 }) {
   return (
     <div className="toolbar">
@@ -39,6 +47,24 @@ export default function Toolbar({
           {tool.label}
         </button>
       ))}
+      <button
+        type="button"
+        className="toolbar-btn"
+        disabled={!canUndo}
+        onClick={onUndo}
+        title={canUndo ? 'Undo last action (Ctrl+Z)' : 'Nothing to undo'}
+      >
+        Undo
+      </button>
+      <button
+        type="button"
+        className="toolbar-btn"
+        disabled={!canRedo}
+        onClick={onRedo}
+        title={canRedo ? 'Redo last undone action (Ctrl+Y / Ctrl+Shift+Z)' : 'Nothing to redo'}
+      >
+        Redo
+      </button>
       <button
         type="button"
         className="toolbar-btn delete-btn"

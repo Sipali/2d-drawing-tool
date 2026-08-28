@@ -8,14 +8,24 @@ import './App.css'
 
 function App() {
   const drawingState = useDrawing()
-  const { shapes, selectedShapeId, setShapes, setSelectedShapeId } = drawingState
+  const {
+    shapes,
+    selectedShapeId,
+    setSelectedShapeId,
+    commitShapes,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = drawingState
+
   const canvasRef = useRef(null)
 
   const deleteSelectedShape = useCallback(() => {
     if (!selectedShapeId) return
-    setShapes((prevShapes) => prevShapes.filter((shape) => shape.id !== selectedShapeId))
+    commitShapes((prevShapes) => prevShapes.filter((shape) => shape.id !== selectedShapeId))
     setSelectedShapeId(null)
-  }, [selectedShapeId, setShapes, setSelectedShapeId])
+  }, [selectedShapeId, commitShapes, setSelectedShapeId])
 
   const handleExportJson = useCallback(() => {
     exportShapesAsJson(shapes)
@@ -25,6 +35,12 @@ function App() {
     exportCanvasAsPng(canvasRef, shapes, selectedShapeId)
   }, [shapes, selectedShapeId])
 
+  // Ref that always points to the latest action handlers, avoiding stale closures in keydown listener
+  const actionsRef = useRef({ undo, redo, deleteSelectedShape })
+  useEffect(() => {
+    actionsRef.current = { undo, redo, deleteSelectedShape }
+  })
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       const target = event.target
@@ -33,8 +49,17 @@ function App() {
         return
       }
 
-      if (event.key === 'Delete' || event.key === 'Backspace') {
-        deleteSelectedShape()
+      const isCtrlOrCmd = event.ctrlKey || event.metaKey
+      const key = event.key.toLowerCase()
+
+      if (isCtrlOrCmd && key === 'z' && !event.shiftKey) {
+        event.preventDefault()
+        actionsRef.current.undo()
+      } else if ((isCtrlOrCmd && key === 'y') || (isCtrlOrCmd && key === 'z' && event.shiftKey)) {
+        event.preventDefault()
+        actionsRef.current.redo()
+      } else if (event.key === 'Delete' || event.key === 'Backspace') {
+        actionsRef.current.deleteSelectedShape()
       }
     }
 
@@ -42,7 +67,7 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [deleteSelectedShape])
+  }, [])
 
   return (
     <div className="app-container">
@@ -53,6 +78,10 @@ function App() {
         onDeleteShape={deleteSelectedShape}
         onExportJson={handleExportJson}
         onExportPng={handleExportPng}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
       />
       <div className="canvas-container">
         <DrawingCanvas canvasRef={canvasRef} {...drawingState} />
