@@ -37,12 +37,30 @@ export function renderShapes(ctx, shapes = [], draft = null, selectedShapeId = n
       ctx.moveTo(shape.x1, shape.y1);
       ctx.lineTo(shape.x2, shape.y2);
       ctx.stroke();
+
+      // Persistent dimension label near line midpoint
+      const length = getLineLength(shape.x1, shape.y1, shape.x2, shape.y2);
+      const midX = (shape.x1 + shape.x2) / 2;
+      const midY = (shape.y1 + shape.y2) / 2;
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.fillText(`${length}px`, midX + 6, midY - 6);
     } else if (shape.type === 'rectangle') {
       ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+
+      // Persistent dimension label near rectangle top-left corner
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.fillText(`${shape.width} x ${shape.height}`, shape.x + 4, shape.y - 4);
     } else if (shape.type === 'circle') {
       ctx.beginPath();
       ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Persistent dimension label near top edge of circle
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.fillText(`r = ${shape.r}`, shape.cx - 15, shape.cy - shape.r - 4);
     }
 
     ctx.restore();
