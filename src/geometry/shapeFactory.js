@@ -21,7 +21,7 @@ export function createLineShape(id, x1, y1, x2, y2) {
 
 /**
  * Creates a normalized rectangle shape data object.
- * Normalizes start and end coordinates so x, y is always top-left corner and width, height are positive.
+ * Normalizes start and end coordinates so x, y is always top-left corner and width, height are positive and rounded to 2 decimal places.
  * @param {string} id 
  * @param {number} startX 
  * @param {number} startY 
@@ -31,8 +31,10 @@ export function createLineShape(id, x1, y1, x2, y2) {
 export function createRectangleShape(id, startX, startY, endX, endY) {
   const x = Math.min(startX, endX);
   const y = Math.min(startY, endY);
-  const width = Math.abs(endX - startX);
-  const height = Math.abs(endY - startY);
+  const rawWidth = Math.abs(endX - startX);
+  const rawHeight = Math.abs(endY - startY);
+  const width = Math.round(rawWidth * 100) / 100;
+  const height = Math.round(rawHeight * 100) / 100;
 
   return {
     id,
